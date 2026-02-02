@@ -1,6 +1,7 @@
 """Unit tests for the RAG retriever."""
 
 import pytest
+import numpy as np
 from unittest.mock import Mock, patch, MagicMock
 from src.rag.retriever import QdrantRetriever, RetrievedDocument
 
@@ -20,7 +21,7 @@ class TestQdrantRetriever:
         with patch("src.rag.retriever.SentenceTransformer") as mock_st:
             mock_instance = MagicMock()
             mock_instance.get_sentence_embedding_dimension.return_value = 384
-            mock_instance.encode.return_value = [0.1] * 384
+            mock_instance.encode.return_value = np.array([0.1] * 384)
             mock_st.return_value = mock_instance
             yield mock_st
 
