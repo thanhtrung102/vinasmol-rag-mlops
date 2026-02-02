@@ -165,10 +165,18 @@ def demo_sample_data():
     console.rule("[bold blue]5. Sample Data Generation")
 
     import json
+    import subprocess
     from pathlib import Path
 
-    # Run the sample data script
-    exec(open("scripts/download_sample_data.py").read())
+    # Run the sample data script as subprocess
+    result = subprocess.run(
+        [sys.executable, "scripts/download_sample_data.py"],
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        console.print(f"[red]Error generating data:[/red] {result.stderr}")
+        return
 
     data_dir = Path("data")
     train_file = data_dir / "train.jsonl"
