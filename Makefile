@@ -8,15 +8,15 @@ setup: install-dev pre-commit-install
 	@echo "✅ Development environment setup complete"
 
 install:
-	pip install --upgrade pip
-	pip install -r requirements.txt
+	python -m pip install --upgrade pip
+	python -m pip install -r requirements.txt
 
 install-dev: install
-	pip install -r requirements-dev.txt
+	python -m pip install -r requirements-dev.txt
 
 pre-commit-install:
-	pre-commit install
-	pre-commit install --hook-type commit-msg
+	python -m pre_commit install
+	python -m pre_commit install --hook-type commit-msg
 
 # =============================================================================
 # CODE QUALITY
@@ -31,7 +31,7 @@ format:
 	ruff check --fix src tests
 
 pre-commit:
-	pre-commit run --all-files
+	python -m pre_commit run --all-files
 
 # =============================================================================
 # TESTING

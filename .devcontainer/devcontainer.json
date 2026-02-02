@@ -46,7 +46,7 @@
     "3000": { "label": "Grafana", "onAutoForward": "notify" },
     "9090": { "label": "Prometheus", "onAutoForward": "notify" }
   },
-  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt -r requirements-dev.txt && pre-commit install",
+  "postCreateCommand": "python -m pip install --upgrade pip && python -m pip install -r requirements.txt -r requirements-dev.txt && python -m pre_commit install",
   "postStartCommand": "docker compose up -d",
   "containerEnv": {
     "PYTHONPATH": "${containerWorkspaceFolder}/src",
