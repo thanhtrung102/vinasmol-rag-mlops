@@ -12,6 +12,12 @@ This script demonstrates the core data processing capabilities:
 Run: python scripts/demo_phase1.py
 """
 
+import sys
+from pathlib import Path
+
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
