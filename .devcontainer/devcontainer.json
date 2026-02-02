@@ -1,0 +1,77 @@
+{
+  "name": "VinaSmol RAG MLOps",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb",
+    "storage": "32gb"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-toolsai.jupyter",
+        "redhat.vscode-yaml",
+        "hashicorp.terraform",
+        "ms-azuretools.vscode-docker",
+        "GitHub.copilot",
+        "mtxr.sqltools",
+        "iterative.dvc"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.formatting.provider": "none",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.ruff": "explicit",
+          "source.organizeImports.ruff": "explicit"
+        },
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
+      }
+    }
+  },
+  "forwardPorts": [
+    8000,
+    8080,
+    5000,
+    6333,
+    3000,
+    9090,
+    5432
+  ],
+  "portsAttributes": {
+    "8000": { "label": "FastAPI", "onAutoForward": "notify" },
+    "8080": { "label": "MLflow", "onAutoForward": "notify" },
+    "5000": { "label": "Prefect", "onAutoForward": "notify" },
+    "6333": { "label": "Qdrant", "onAutoForward": "notify" },
+    "3000": { "label": "Grafana", "onAutoForward": "notify" },
+    "9090": { "label": "Prometheus", "onAutoForward": "notify" }
+  },
+  "postCreateCommand": "make setup",
+  "postStartCommand": "make services-up",
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "PYTHONPATH": "${containerWorkspaceFolder}/src",
+    "MLFLOW_TRACKING_URI": "http://localhost:8080",
+    "QDRANT_HOST": "localhost",
+    "QDRANT_PORT": "6333"
+  }
+}
