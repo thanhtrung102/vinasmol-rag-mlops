@@ -10,8 +10,14 @@ This module provides memory-optimized LoRA fine-tuning with:
 import argparse
 import logging
 import os
+import shutil
 from pathlib import Path
 from typing import Any
+
+# Set environment variables before importing transformers
+# to avoid flash attention issues
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import mlflow
 import torch
@@ -120,6 +126,9 @@ class VinaSmolLoRATrainer:
         """Load the base model with quantization and apply LoRA."""
         logger.info(f"Loading model: {self.config.model.name}")
 
+        # Initialize model as None for retry logic
+        self.model = None
+
         # Quantization config for memory efficiency
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=self.config.quantization.load_in_4bit,
@@ -142,28 +151,78 @@ class VinaSmolLoRATrainer:
 
         # Load model with quantization
         # Use eager attention to avoid flash_attn compatibility issues
-        try:
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.config.model.name,
-                revision=self.config.model.revision,
-                quantization_config=bnb_config,
-                device_map="auto",
-                trust_remote_code=self.config.model.trust_remote_code,
-                attn_implementation="eager",  # Disable flash attention
-                low_cpu_mem_usage=True,
-            )
-        except TypeError as e:
-            # Fallback if attn_implementation is not supported
-            logger.warning(f"attn_implementation parameter not supported: {e}")
-            logger.info("Retrying model load without attn_implementation parameter")
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.config.model.name,
-                revision=self.config.model.revision,
-                quantization_config=bnb_config,
-                device_map="auto",
-                trust_remote_code=self.config.model.trust_remote_code,
-                low_cpu_mem_usage=True,
-            )
+        max_retries = 2
+        last_error = None
+
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Loading model (attempt {attempt + 1}/{max_retries})")
+
+                # Try with attn_implementation first
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    self.config.model.name,
+                    revision=self.config.model.revision,
+                    quantization_config=bnb_config,
+                    device_map="auto",
+                    trust_remote_code=self.config.model.trust_remote_code,
+                    attn_implementation="eager",  # Disable flash attention
+                    low_cpu_mem_usage=True,
+                    resume_download=True,
+                )
+                break  # Success, exit retry loop
+
+            except FileNotFoundError as e:
+                # HuggingFace cache corruption - clear and retry
+                if "flash_attn" in str(e) and attempt < max_retries - 1:
+                    logger.warning(f"Cache corruption detected: {e}")
+                    logger.info("Clearing transformers module cache...")
+
+                    # Clear the corrupted cache
+                    cache_dir = Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules"
+                    model_slug = self.config.model.name.replace("/", "--")
+
+                    for pattern in [f"*{model_slug}*", "*PhoGPT*"]:
+                        for cache_path in cache_dir.glob(pattern):
+                            logger.info(f"Removing: {cache_path}")
+                            shutil.rmtree(cache_path, ignore_errors=True)
+
+                    logger.info("Cache cleared, retrying download...")
+                    continue
+                else:
+                    last_error = e
+
+            except TypeError as e:
+                # attn_implementation not supported in this transformers version
+                if "attn_implementation" in str(e):
+                    logger.warning(f"attn_implementation parameter not supported: {e}")
+                    logger.info("Retrying without attn_implementation parameter")
+
+                    try:
+                        self.model = AutoModelForCausalLM.from_pretrained(
+                            self.config.model.name,
+                            revision=self.config.model.revision,
+                            quantization_config=bnb_config,
+                            device_map="auto",
+                            trust_remote_code=self.config.model.trust_remote_code,
+                            low_cpu_mem_usage=True,
+                            resume_download=True,
+                        )
+                        break
+                    except Exception as fallback_error:
+                        last_error = fallback_error
+                else:
+                    last_error = e
+
+            except Exception as e:
+                last_error = e
+                logger.error(f"Unexpected error during model loading: {e}")
+                if attempt < max_retries - 1:
+                    logger.info("Retrying...")
+                    continue
+
+        # If we exhausted retries, raise the last error
+        if self.model is None:
+            raise RuntimeError(f"Failed to load model after {max_retries} attempts") from last_error
 
         # Prepare for k-bit training
         self.model = prepare_model_for_kbit_training(self.model)
