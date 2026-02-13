@@ -19,7 +19,7 @@ def mock_ml_models():
     # Mock SentenceTransformer to avoid downloading embedding model
     mock_encoder = MagicMock()
     mock_encoder.get_sentence_embedding_dimension.return_value = EMBEDDING_DIM
-    mock_encoder.encode.side_effect = lambda x, **kwargs: (
+    mock_encoder.encode.side_effect = lambda x, **_kwargs: (
         np.random.rand(len(x), EMBEDDING_DIM).astype(np.float32)
         if isinstance(x, list)
         else np.random.rand(EMBEDDING_DIM).astype(np.float32)
