@@ -70,8 +70,11 @@ class TestQdrantRetriever:
         mock_hit.payload = {"content": "Test document", "source": "test"}
         mock_hit.score = 0.85
 
+        mock_response = MagicMock()
+        mock_response.points = [mock_hit]
+
         mock_client_instance = MagicMock()
-        mock_client_instance.search.return_value = [mock_hit]
+        mock_client_instance.query_points.return_value = mock_response
         mock_qdrant_client.return_value = mock_client_instance
 
         retriever = QdrantRetriever(collection_name="test")
@@ -84,8 +87,11 @@ class TestQdrantRetriever:
 
     def test_retrieve_empty_results(self, mock_qdrant_client, mock_encoder):
         """Test retrieval with no matching documents."""
+        mock_response = MagicMock()
+        mock_response.points = []
+
         mock_client_instance = MagicMock()
-        mock_client_instance.search.return_value = []
+        mock_client_instance.query_points.return_value = mock_response
         mock_qdrant_client.return_value = mock_client_instance
 
         retriever = QdrantRetriever(collection_name="test")
