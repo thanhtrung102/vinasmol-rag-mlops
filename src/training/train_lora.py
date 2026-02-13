@@ -255,13 +255,47 @@ class VinaSmolLoRATrainer:
 
                     logger.info(f"Removed {removed_count} cache entries. Retrying with force_download...")
 
-                    # Retry with force_download to bypass cache
+                    # Retry by manually populating transformers_modules cache
                     try:
-                        # Try to fix cache paths after clearing
                         import time
                         time.sleep(0.5)  # Give filesystem time to sync
-                        self._fix_transformers_cache_paths()
 
+                        # Download files to hub cache first
+                        logger.info("Pre-downloading model files to hub cache...")
+                        from huggingface_hub import snapshot_download
+
+                        snapshot_path = snapshot_download(
+                            repo_id=self.config.model.name,
+                            revision=self.config.model.revision,
+                            allow_patterns=["*.py", "*.json"],
+                            force_download=False,
+                            local_files_only=False,
+                        )
+                        logger.info(f"Files downloaded to: {snapshot_path}")
+
+                        # Manually copy Python files to transformers_modules with BOTH names
+                        transformers_cache = Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules" / "vinai"
+
+                        # Create both directory structures
+                        encoded_dir = transformers_cache / f"PhoGPT_hyphen_4B_hyphen_Chat" / self.config.model.revision
+                        regular_dir = transformers_cache / f"PhoGPT-4B-Chat" / self.config.model.revision
+
+                        encoded_dir.mkdir(parents=True, exist_ok=True)
+                        regular_dir.mkdir(parents=True, exist_ok=True)
+
+                        # Copy all Python and JSON files
+                        snapshot_path_obj = Path(snapshot_path)
+                        copied_count = 0
+                        for file_pattern in ["*.py", "*.json"]:
+                            for source_file in snapshot_path_obj.glob(file_pattern):
+                                logger.info(f"Copying {source_file.name} to both cache locations")
+                                shutil.copy2(source_file, encoded_dir / source_file.name)
+                                shutil.copy2(source_file, regular_dir / source_file.name)
+                                copied_count += 1
+
+                        logger.info(f"Copied {copied_count} files. Retrying model load...")
+
+                        # Now try loading the model
                         self.model = AutoModelForCausalLM.from_pretrained(
                             self.config.model.name,
                             revision=self.config.model.revision,
@@ -270,22 +304,13 @@ class VinaSmolLoRATrainer:
                             trust_remote_code=self.config.model.trust_remote_code,
                             attn_implementation="eager",
                             low_cpu_mem_usage=True,
-                            force_download=True,  # Force fresh download
+                            local_files_only=True,  # Use local cache we just populated
                         )
                         break
-                    except FileNotFoundError as path_error:
-                        if "flash_attn" in str(path_error):
-                            logger.warning(f"Path issue persists: {path_error}")
-                            # Try one more time to fix paths
-                            time.sleep(0.5)
-                            self._fix_transformers_cache_paths()
-                            last_error = path_error
-                            continue
-                        else:
-                            last_error = path_error
-                            continue
                     except Exception as retry_error:
-                        logger.error(f"Force download also failed: {retry_error}")
+                        logger.error(f"Manual cache population failed: {retry_error}")
+                        import traceback
+                        logger.error(traceback.format_exc())
                         last_error = retry_error
                         continue
                 else:
