@@ -3,8 +3,9 @@
 Vietnamese LLM (VinaSmol) and RAG System with Production-Grade MLOps Pipeline.
 
 [![CI Pipeline](https://github.com/thanhtrung102/vinasmol-rag-mlops/actions/workflows/ci.yaml/badge.svg)](https://github.com/thanhtrung102/vinasmol-rag-mlops/actions)
-![Project Status](https://img.shields.io/badge/Status-86%25_Complete-blue)
-![Phase](https://img.shields.io/badge/Phase-6_of_7-green)
+![Project Status](https://img.shields.io/badge/Status-100%25_Complete-brightgreen)
+![Phase](https://img.shields.io/badge/Phase-7_of_7-brightgreen)
+![Production Ready](https://img.shields.io/badge/Production-Ready-success)
 
 ## Overview
 
@@ -14,7 +15,7 @@ This project implements a **production-ready MLOps pipeline** for Vietnamese lan
 - **OpenRAG**: Retrieval-Augmented Generation with hallucination detection and evaluation
 - **MLOps**: Comprehensive experiment tracking, monitoring, CI/CD, and observability
 
-### 🎯 Project Status: **86% Complete** (6 of 7 Phases)
+### 🎯 Project Status: **100% COMPLETE** ✨ (7 of 7 Phases)
 
 | Phase | Status | Description |
 |-------|--------|-------------|
@@ -23,8 +24,10 @@ This project implements a **production-ready MLOps pipeline** for Vietnamese lan
 | 3. RAG System | ✅ Complete | Qdrant + FastAPI + Reranking |
 | 4. Evaluation Framework | ✅ Complete | Ragas + Hallucination detection |
 | 5. Monitoring Stack | ✅ Complete | Prometheus + Grafana + LangFuse |
-| 6. Infrastructure as Code | 🔲 Pending | Terraform modules (GCP/AWS) |
+| 6. Infrastructure as Code | ✅ Complete | Terraform modules (GCP) |
 | 7. CI/CD Pipeline | ✅ Complete | GitHub Actions with quality gates |
+
+**🎉 All phases complete! Production-ready MLOps system for Vietnamese LLM and RAG.**
 
 📊 [**View Detailed Status**](PROJECT_STATUS_UPDATE.md) | 📋 [**Implementation Plan**](IMPLEMENTATION_PLAN.md)
 
@@ -217,6 +220,250 @@ done
 - [Grafana Dashboard Guide](configs/grafana/dashboards/) - Panel descriptions
 - [Alert Rules](configs/alert.rules.yml) - Prometheus alerting configuration
 
+### 6. Infrastructure Deployment
+
+**Deploy to Google Cloud Platform with Terraform**
+
+```bash
+# Navigate to Terraform directory
+cd infrastructure/terraform
+
+# Initialize Terraform
+terraform init
+
+# Plan deployment (development environment)
+terraform plan -var-file=environments/dev.tfvars
+
+# Deploy infrastructure
+terraform apply -var-file=environments/dev.tfvars
+
+# Get service endpoints
+terraform output
+```
+
+**Infrastructure provisioned**:
+- ✅ API Server (n2-standard-4, Ubuntu 22.04)
+- ✅ Training Server (n1-standard-4 + T4 GPU)
+- ✅ Cloud Storage buckets (artifacts, data, MLflow)
+- ✅ Cloud SQL PostgreSQL (MLflow backend)
+- ✅ Memorystore Redis (caching)
+- ✅ VPC with firewall rules
+- ✅ Auto-deployment via startup scripts
+
+📚 **Full Documentation**: [infrastructure/terraform/README.md](infrastructure/terraform/README.md)
+
+**Cost Estimates**:
+- Development: ~$260/month
+- Production: ~$1,110/month
+
+## Demo Guide
+
+### Local Development Demo
+
+**1. Start All Services**:
+```bash
+# Start Docker Compose services
+make services-up
+
+# Wait for services to be healthy (~30 seconds)
+docker-compose ps
+```
+
+**2. Add Documents to RAG System**:
+```bash
+# Add Vietnamese documents
+curl -X POST http://localhost:8000/documents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "documents": [
+      "Việt Nam là một quốc gia ở Đông Nam Á. Thủ đô là Hà Nội.",
+      "Phở là món ăn truyền thống của Việt Nam, rất phổ biến.",
+      "Vịnh Hạ Long là Di sản Thiên nhiên Thế giới được UNESCO công nhận."
+    ]
+  }'
+```
+
+**3. Query the RAG System**:
+```bash
+# Ask questions in Vietnamese
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Thủ đô của Việt Nam là gì?", "top_k": 3}'
+
+# Check cache performance
+curl http://localhost:8000/cache/stats
+```
+
+**4. View Monitoring Dashboards**:
+```bash
+# Open in browser:
+open http://localhost:3000  # Grafana (admin/admin)
+open http://localhost:9090  # Prometheus
+open http://localhost:8080  # MLflow
+
+# Generate test traffic to populate dashboards
+for i in {1..20}; do
+  curl -X POST http://localhost:8000/query \
+    -H "Content-Type: application/json" \
+    -d "{\"question\": \"Test query $i about Vietnam\", \"top_k\": 3}"
+  sleep 2
+done
+```
+
+**5. Run Evaluation**:
+```bash
+# Evaluate RAG system quality
+make eval-rag
+
+# Run hallucination detection
+python -m src.evaluation.vietnamese_benchmark --stats
+
+# View results in MLflow UI
+open http://localhost:8080
+```
+
+**6. Train Model (Requires GPU)**:
+```bash
+# Fine-tune PhoGPT with LoRA (requires GPU)
+make train-lora
+
+# View training progress in MLflow
+open http://localhost:8080
+```
+
+### Production Deployment Demo
+
+**1. Deploy Infrastructure**:
+```bash
+cd infrastructure/terraform
+
+# Deploy to GCP production environment
+terraform apply -var-file=environments/prod.tfvars
+
+# Get API server IP
+export API_IP=$(terraform output -raw api_server_ip)
+```
+
+**2. Access Production Services**:
+```bash
+# RAG API
+curl http://$API_IP:8000/health
+
+# Grafana Dashboard
+open http://$API_IP:3000
+
+# MLflow UI
+open http://$API_IP:8080
+
+# Prometheus
+open http://$API_IP:9090
+```
+
+**3. SSH to Servers**:
+```bash
+# SSH to API server
+gcloud compute ssh vinasmol-prod-vm-api --zone=us-central1-a
+
+# SSH to training server (with GPU)
+gcloud compute ssh vinasmol-prod-vm-training --zone=us-central1-a
+```
+
+**4. Monitor Production Metrics**:
+```bash
+# View real-time metrics
+curl http://$API_IP:8000/metrics
+
+# Check Prometheus alerts
+curl http://$API_IP:9090/api/v1/alerts
+
+# View Grafana dashboard
+# Navigate to "RAG System Metrics" in Grafana UI
+```
+
+**5. Run Production Training**:
+```bash
+# SSH to training server
+gcloud compute ssh vinasmol-prod-vm-training --zone=us-central1-a
+
+# Inside training server
+cd vinasmol-rag-mlops
+python -m src.training.train_lora \
+  --config configs/training_config.yaml \
+  --push-to-hub
+```
+
+### Feature Showcase
+
+**1. RAG with Caching**:
+```bash
+# First query (cache miss)
+time curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is pho?"}'
+
+# Same query (cache hit - much faster)
+time curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is pho?"}'
+```
+
+**2. Streaming Responses**:
+```bash
+# Stream RAG response
+curl -N -X POST http://localhost:8000/query/stream \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Tell me about Vietnam"}'
+```
+
+**3. Document Reranking**:
+```bash
+# Add more documents
+curl -X POST http://localhost:8000/documents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "documents": [
+      "Ho Chi Minh City is the largest city in Vietnam.",
+      "Vietnamese coffee is famous worldwide.",
+      "The Mekong Delta is known for its floating markets."
+    ]
+  }'
+
+# Query with reranking (top_k triggers reranking)
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Tell me about Vietnamese cities", "top_k": 5}'
+```
+
+**4. Prometheus Alerts**:
+```bash
+# Trigger high error rate alert (send many bad requests)
+for i in {1..100}; do
+  curl -X POST http://localhost:8000/query \
+    -H "Content-Type: application/json" \
+    -d '{"question": ""}' &
+done
+
+# Check if alert fired
+curl http://localhost:9090/api/v1/alerts | jq '.data.alerts[] | select(.labels.alertname=="HighErrorRate")'
+```
+
+**5. LangFuse Tracing** (Optional):
+```bash
+# Set LangFuse credentials
+export LANGFUSE_PUBLIC_KEY=pk-lf-your-key
+export LANGFUSE_SECRET_KEY=sk-lf-your-secret
+
+# Restart API
+docker-compose restart fastapi
+
+# Send queries - traces appear in LangFuse dashboard
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is the capital of Vietnam?"}'
+
+# View traces at https://cloud.langfuse.com
+```
+
 ## Development
 
 ```bash
@@ -285,7 +532,7 @@ Key settings:
 |----------|-------------|
 | **CI/CD** | GitHub Actions (5-job pipeline) |
 | **Containers** | Docker, Docker Compose |
-| **IaC** | Terraform (pending) |
+| **IaC** | Terraform (18 files, 3 modules) |
 | **Testing** | pytest, ruff, mypy |
 | **Package Build** | Python build, setuptools |
 
