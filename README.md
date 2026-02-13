@@ -94,9 +94,10 @@ vinasmol-rag-mlops/
 | FastAPI | 8000 | RAG API endpoints |
 | MLflow | 8080 | Experiment tracking |
 | Qdrant | 6333 | Vector database |
-| Grafana | 3000 | Dashboards |
-| Prometheus | 9090 | Metrics |
+| Grafana | 3000 | Dashboards (admin/admin) |
+| Prometheus | 9090 | Metrics collection |
 | Prefect | 5000 | Orchestration |
+| LangFuse | Cloud | LLM tracing (optional) |
 
 ## Usage
 
@@ -138,6 +139,24 @@ make eval-rag
 # Run hallucination detection
 make eval-hallucination
 ```
+
+### 5. Monitoring
+
+```bash
+# Start monitoring stack
+make services-up
+
+# View dashboards
+# Grafana: http://localhost:3000 (admin/admin)
+# Prometheus: http://localhost:9090
+# API Metrics: http://localhost:8000/metrics
+
+# Optional: Setup LangFuse tracing
+export LANGFUSE_PUBLIC_KEY=pk-lf-...
+export LANGFUSE_SECRET_KEY=sk-lf-...
+```
+
+See [MONITORING_SETUP.md](MONITORING_SETUP.md) for detailed monitoring documentation.
 
 ## Development
 

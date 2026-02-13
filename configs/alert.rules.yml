@@ -1,0 +1,86 @@
+groups:
+  - name: rag_api_alerts
+    interval: 30s
+    rules:
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(rag_requests_total{status="error"}[5m]))
+          /
+          sum(rate(rag_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: rag-api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      # High latency alert
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(rag_request_latency_seconds_bucket[5m])
+          ) > 3.0
+        for: 5m
+        labels:
+          severity: warning
+          service: rag-api
+        annotations:
+          summary: "High request latency detected"
+          description: "95th percentile latency is {{ $value }}s over the last 5 minutes"
+
+      # Low retrieval scores alert
+      - alert: LowRetrievalScores
+        expr: |
+          histogram_quantile(0.50,
+            rate(rag_retrieval_score_bucket[10m])
+          ) < 0.3
+        for: 10m
+        labels:
+          severity: info
+          service: rag-api
+        annotations:
+          summary: "Low retrieval scores detected"
+          description: "Median retrieval score is {{ $value }} over the last 10 minutes"
+
+      # Low cache hit rate alert
+      - alert: LowCacheHitRate
+        expr: |
+          sum(rate(rag_cache_hits_total[5m]))
+          /
+          (sum(rate(rag_cache_hits_total[5m])) + sum(rate(rag_cache_misses_total[5m]))) < 0.2
+        for: 10m
+        labels:
+          severity: info
+          service: rag-api
+        annotations:
+          summary: "Low cache hit rate detected"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      # Service down alert
+      - alert: ServiceDown
+        expr: up{job="fastapi"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: rag-api
+        annotations:
+          summary: "RAG API service is down"
+          description: "RAG API has been down for more than 1 minute"
+
+  - name: resource_alerts
+    interval: 30s
+    rules:
+      # High memory usage (requires node_exporter or cAdvisor)
+      - alert: HighMemoryUsage
+        expr: |
+          (sum(container_memory_usage_bytes{container=~"vinasmol.*"})
+          /
+          sum(container_spec_memory_limit_bytes{container=~"vinasmol.*"})) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is at {{ $value | humanizePercentage }}"

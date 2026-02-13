@@ -84,11 +84,13 @@ services:
       - "9090:9090"
     volumes:
       - ./configs/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - ./configs/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
     mem_limit: 512m
     restart: unless-stopped
 
@@ -103,10 +105,12 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./configs/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/rag-metrics.json
     mem_limit: 256m
     restart: unless-stopped
     depends_on:

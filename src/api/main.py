@@ -17,11 +17,15 @@ from prometheus_client import Counter, Histogram, generate_latest
 from pydantic import BaseModel, Field
 from starlette.responses import Response
 
+from src.monitoring import get_tracer
 from src.rag import RAGCache, RAGPipeline
 from src.rag.config import RAGConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Initialize LangFuse tracer
+langfuse_tracer = get_tracer()
 
 # Metrics
 REQUEST_COUNT = Counter(
@@ -132,6 +136,9 @@ async def lifespan(app: FastAPI):
     # Cleanup
     if rag_cache:
         rag_cache.close()
+
+    # Flush LangFuse traces
+    langfuse_tracer.flush()
 
 
 app = FastAPI(
@@ -249,6 +256,20 @@ async def query(request: QueryRequest):
             cache_data = response_data.copy()
             cache_data["sources"] = [s.dict() for s in cache_data["sources"]]
             rag_cache.set(request.question, cache_data, **cache_key_params)
+
+        # Trace with LangFuse
+        langfuse_tracer.trace_rag_query(
+            question=result.question,
+            answer=result.answer,
+            sources=[s.dict() for s in response_data["sources"]],
+            latency_ms=latency_ms,
+            cached=cached,
+            metadata={
+                "top_k": request.top_k,
+                "temperature": request.temperature,
+                "max_tokens": request.max_tokens,
+            },
+        )
 
         return QueryResponse(**response_data)
 
