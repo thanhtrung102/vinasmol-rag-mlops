@@ -1,0 +1,30 @@
+# Example Terraform Configuration
+# Copy this file to terraform.tfvars and update with your values
+
+project_id  = "your-gcp-project-id"
+region      = "us-central1"
+zone        = "us-central1-a"
+environment = "dev"
+
+# Networking
+network_name = "vinasmol-vpc"
+subnet_cidr  = "10.0.0.0/24"
+
+# Compute
+api_machine_type = "n2-standard-4"
+api_disk_size_gb = 50
+
+training_machine_type = "n1-standard-4"
+training_gpu_type     = "nvidia-tesla-t4"
+training_gpu_count    = 1
+enable_training_server = true
+
+# Storage
+storage_class = "STANDARD"
+
+# Managed Services
+enable_cloud_sql = true
+sql_tier         = "db-f1-micro"
+
+enable_redis         = true
+redis_memory_size_gb = 1

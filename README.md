@@ -2,12 +2,31 @@
 
 Vietnamese LLM (VinaSmol) and RAG System with Production-Grade MLOps Pipeline.
 
+[![CI Pipeline](https://github.com/thanhtrung102/vinasmol-rag-mlops/actions/workflows/ci.yaml/badge.svg)](https://github.com/thanhtrung102/vinasmol-rag-mlops/actions)
+![Project Status](https://img.shields.io/badge/Status-86%25_Complete-blue)
+![Phase](https://img.shields.io/badge/Phase-6_of_7-green)
+
 ## Overview
 
-This project implements an end-to-end MLOps pipeline for:
-- **VinaSmol**: Fine-tuning Vietnamese language models using LoRA
-- **OpenRAG**: Retrieval-Augmented Generation system with hallucination detection
-- **MLOps**: Experiment tracking, model registry, monitoring, and CI/CD
+This project implements a **production-ready MLOps pipeline** for Vietnamese language models and RAG systems:
+
+- **VinaSmol**: Fine-tuning Vietnamese language models using LoRA (PhoGPT-4B-Chat)
+- **OpenRAG**: Retrieval-Augmented Generation with hallucination detection and evaluation
+- **MLOps**: Comprehensive experiment tracking, monitoring, CI/CD, and observability
+
+### 🎯 Project Status: **86% Complete** (6 of 7 Phases)
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 1. Data Pipeline | ✅ Complete | Vietnamese text processing from Common Crawl |
+| 2. Training Infrastructure | ✅ Complete | MLflow + LoRA fine-tuning |
+| 3. RAG System | ✅ Complete | Qdrant + FastAPI + Reranking |
+| 4. Evaluation Framework | ✅ Complete | Ragas + Hallucination detection |
+| 5. Monitoring Stack | ✅ Complete | Prometheus + Grafana + LangFuse |
+| 6. Infrastructure as Code | 🔲 Pending | Terraform modules (GCP/AWS) |
+| 7. CI/CD Pipeline | ✅ Complete | GitHub Actions with quality gates |
+
+📊 [**View Detailed Status**](PROJECT_STATUS_UPDATE.md) | 📋 [**Implementation Plan**](IMPLEMENTATION_PLAN.md)
 
 ## Quick Start (GitHub Codespaces)
 
@@ -89,15 +108,29 @@ vinasmol-rag-mlops/
 
 ## Services
 
-| Service | Port | Description |
-|---------|------|-------------|
-| FastAPI | 8000 | RAG API endpoints |
-| MLflow | 8080 | Experiment tracking |
-| Qdrant | 6333 | Vector database |
-| Grafana | 3000 | Dashboards (admin/admin) |
-| Prometheus | 9090 | Metrics collection |
-| Prefect | 5000 | Orchestration |
-| LangFuse | Cloud | LLM tracing (optional) |
+All services run via Docker Compose with persistent volumes and health checks.
+
+| Service | Port | Status | Description |
+|---------|------|--------|-------------|
+| **FastAPI** | 8000 | ✅ Ready | RAG API with streaming support |
+| **Qdrant** | 6333 | ✅ Ready | Vector database (v1.11.3) |
+| **MLflow** | 8080 | ✅ Ready | Experiment tracking UI |
+| **Redis** | 6379 | ✅ Ready | Query result caching |
+| **Prometheus** | 9090 | ✅ Ready | Metrics collection with alerts |
+| **Grafana** | 3000 | ✅ Ready | 8-panel RAG dashboard (admin/admin) |
+| **Postgres** | 5432 | ✅ Ready | MLflow backend store |
+| **LangFuse** | Cloud | 🔧 Optional | LLM request tracing |
+
+**Quick Access**:
+```bash
+# Health checks
+curl http://localhost:8000/health
+curl http://localhost:6333/health
+curl http://localhost:9090/-/healthy
+
+# Metrics
+curl http://localhost:8000/metrics
+```
 
 ## Usage
 
@@ -140,23 +173,49 @@ make eval-rag
 make eval-hallucination
 ```
 
-### 5. Monitoring
+### 5. Monitoring & Observability
+
+**Full monitoring stack with Prometheus, Grafana, and LangFuse integration.**
 
 ```bash
-# Start monitoring stack
+# Start all services (includes monitoring)
 make services-up
 
-# View dashboards
-# Grafana: http://localhost:3000 (admin/admin)
+# Access monitoring dashboards
+# Grafana:    http://localhost:3000 (admin/admin)
 # Prometheus: http://localhost:9090
-# API Metrics: http://localhost:8000/metrics
-
-# Optional: Setup LangFuse tracing
-export LANGFUSE_PUBLIC_KEY=pk-lf-...
-export LANGFUSE_SECRET_KEY=sk-lf-...
+# MLflow:     http://localhost:8080
+# Metrics:    http://localhost:8000/metrics
 ```
 
-See [MONITORING_SETUP.md](MONITORING_SETUP.md) for detailed monitoring documentation.
+**Features**:
+- ✅ **8-panel Grafana dashboard** - Request rate, error rate, latency (P50/P95/P99), cache hits, retrieval scores
+- ✅ **5 Prometheus alert rules** - Error rate, latency, retrieval quality, cache performance, uptime
+- ✅ **LangFuse LLM tracing** - Request/response traces with latency and quality metrics
+- ✅ **Real-time metrics** - Auto-refresh every 10 seconds
+
+**Optional: Enable LangFuse tracing**:
+```bash
+export LANGFUSE_PUBLIC_KEY=pk-lf-your-key
+export LANGFUSE_SECRET_KEY=sk-lf-your-secret
+# Restart API to enable tracing
+```
+
+**Generate test metrics**:
+```bash
+# Send test queries to populate dashboards
+for i in {1..10}; do
+  curl -X POST http://localhost:8000/query \
+    -H "Content-Type: application/json" \
+    -d "{\"question\": \"Test query $i\", \"top_k\": 3}"
+  sleep 1
+done
+```
+
+📊 **Documentation**:
+- [MONITORING_SETUP.md](MONITORING_SETUP.md) - Quick start guide
+- [Grafana Dashboard Guide](configs/grafana/dashboards/) - Panel descriptions
+- [Alert Rules](configs/alert.rules.yml) - Prometheus alerting configuration
 
 ## Development
 
@@ -192,16 +251,43 @@ Key settings:
 
 ## Tech Stack
 
+### Core ML/NLP
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| **Base Model** | PhoGPT-4B-Chat (VinAI) | - |
+| **Framework** | PyTorch, Transformers | 2.1.0, 4.35.2 |
+| **Fine-tuning** | PEFT (LoRA), bitsandbytes | 0.6.2 |
+| **Embeddings** | Sentence-Transformers | paraphrase-multilingual-MiniLM-L12-v2 |
+| **Text Processing** | FastText, underthesea | Vietnamese language detection |
+
+### RAG System
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Vector DB** | Qdrant | v1.11.3 - Semantic search |
+| **Caching** | Redis | v7-alpine - Query result caching |
+| **Reranking** | Cross-encoder | BGE reranker - Result reordering |
+| **API** | FastAPI, Uvicorn | Async REST API with streaming |
+
+### MLOps & Monitoring
 | Category | Technologies |
 |----------|-------------|
-| **LLM** | Transformers, PEFT, bitsandbytes |
-| **RAG** | LangChain, Qdrant, Sentence-Transformers |
-| **MLOps** | MLflow, Prefect, DVC |
+| **Experiment Tracking** | MLflow, Weights & Biases |
+| **Orchestration** | Prefect |
+| **Versioning** | DVC, HuggingFace Hub |
 | **Evaluation** | Ragas, DeepEval |
-| **API** | FastAPI, Uvicorn |
-| **Monitoring** | Prometheus, Grafana, Evidently |
-| **IaC** | Terraform, Docker |
-| **CI/CD** | GitHub Actions |
+| **Metrics** | Prometheus (5 alert rules) |
+| **Dashboards** | Grafana (8-panel dashboard) |
+| **Tracing** | LangFuse (LLM observability) |
+| **Drift Detection** | Evidently |
+
+### DevOps & Infrastructure
+| Category | Technologies |
+|----------|-------------|
+| **CI/CD** | GitHub Actions (5-job pipeline) |
+| **Containers** | Docker, Docker Compose |
+| **IaC** | Terraform (pending) |
+| **Testing** | pytest, ruff, mypy |
+| **Package Build** | Python build, setuptools |
 
 ## Internship Alignment
 
