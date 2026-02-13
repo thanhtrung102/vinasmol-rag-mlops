@@ -116,12 +116,12 @@ class QdrantRetriever:
         """
         query_embedding = self.encoder.encode(query)
 
-        results = self.client.search(
+        results = self.client.query_points(
             collection_name=self.collection_name,
-            query_vector=query_embedding.tolist(),
+            query=query_embedding.tolist(),
             limit=top_k,
             score_threshold=score_threshold,
-        )
+        ).points
 
         return [
             RetrievedDocument(
