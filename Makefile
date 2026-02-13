@@ -110,6 +110,10 @@ train-lora-resume:
 train-lora-push:
 	python -m src.training.train_lora --config configs/training_config.yaml --push-to-hub
 
+clean-hf-cache:
+	@echo "Clearing HuggingFace cache..."
+	@bash scripts/clear_hf_cache.sh
+
 # =============================================================================
 # EVALUATION
 # =============================================================================

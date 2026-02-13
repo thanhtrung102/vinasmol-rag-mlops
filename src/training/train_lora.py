@@ -141,13 +141,29 @@ class VinaSmolLoRATrainer:
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
         # Load model with quantization
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.config.model.name,
-            revision=self.config.model.revision,
-            quantization_config=bnb_config,
-            device_map="auto",
-            trust_remote_code=self.config.model.trust_remote_code,
-        )
+        # Use eager attention to avoid flash_attn compatibility issues
+        try:
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.config.model.name,
+                revision=self.config.model.revision,
+                quantization_config=bnb_config,
+                device_map="auto",
+                trust_remote_code=self.config.model.trust_remote_code,
+                attn_implementation="eager",  # Disable flash attention
+                low_cpu_mem_usage=True,
+            )
+        except TypeError as e:
+            # Fallback if attn_implementation is not supported
+            logger.warning(f"attn_implementation parameter not supported: {e}")
+            logger.info("Retrying model load without attn_implementation parameter")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.config.model.name,
+                revision=self.config.model.revision,
+                quantization_config=bnb_config,
+                device_map="auto",
+                trust_remote_code=self.config.model.trust_remote_code,
+                low_cpu_mem_usage=True,
+            )
 
         # Prepare for k-bit training
         self.model = prepare_model_for_kbit_training(self.model)
