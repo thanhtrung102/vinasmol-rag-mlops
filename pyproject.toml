@@ -57,7 +57,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["ARG001"]
+"tests/*" = ["ARG001", "ARG002"]
 "scripts/*" = ["ARG001"]
 
 [tool.ruff.lint.isort]

@@ -27,7 +27,7 @@ class TestQdrantRetriever:
             mock_st.return_value = mock_instance
             yield mock_st
 
-    def test_initialization(self, mock_qdrant_client, _mock_encoder):
+    def test_initialization(self, mock_qdrant_client, mock_encoder):
         """Test retriever initialization."""
         retriever = QdrantRetriever(
             collection_name="test_collection",
@@ -38,7 +38,7 @@ class TestQdrantRetriever:
         assert retriever.collection_name == "test_collection"
         mock_qdrant_client.assert_called_once_with(host="localhost", port=6333)
 
-    def test_create_collection_new(self, mock_qdrant_client, _mock_encoder):
+    def test_create_collection_new(self, mock_qdrant_client, mock_encoder):
         """Test creating a new collection."""
         mock_client_instance = MagicMock()
         mock_client_instance.get_collections.return_value.collections = []
@@ -49,7 +49,7 @@ class TestQdrantRetriever:
 
         mock_client_instance.create_collection.assert_called_once()
 
-    def test_create_collection_exists(self, mock_qdrant_client, _mock_encoder):
+    def test_create_collection_exists(self, mock_qdrant_client, mock_encoder):
         """Test that existing collection is not recreated."""
         mock_collection = MagicMock()
         mock_collection.name = "existing_collection"
@@ -63,7 +63,7 @@ class TestQdrantRetriever:
 
         mock_client_instance.create_collection.assert_not_called()
 
-    def test_retrieve_returns_documents(self, mock_qdrant_client, _mock_encoder):
+    def test_retrieve_returns_documents(self, mock_qdrant_client, mock_encoder):
         """Test document retrieval."""
         # Mock search results
         mock_hit = MagicMock()
@@ -82,7 +82,7 @@ class TestQdrantRetriever:
         assert results[0].content == "Test document"
         assert results[0].score == 0.85
 
-    def test_retrieve_empty_results(self, mock_qdrant_client, _mock_encoder):
+    def test_retrieve_empty_results(self, mock_qdrant_client, mock_encoder):
         """Test retrieval with no matching documents."""
         mock_client_instance = MagicMock()
         mock_client_instance.search.return_value = []
