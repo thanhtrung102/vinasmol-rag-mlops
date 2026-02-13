@@ -56,7 +56,5 @@ def mock_ml_models():
             )
 
         # Patch RAGGenerator.generate
-        with patch(
-            "src.rag.generator.RAGGenerator.generate", side_effect=patched_generate
-        ):
+        with patch("src.rag.generator.RAGGenerator.generate", side_effect=patched_generate):
             yield
