@@ -1,7 +1,8 @@
 """Unit tests for text processor."""
 
 import pytest
-from src.data_pipeline.text_processor import TextProcessor, ProcessedText
+
+from src.data_pipeline.text_processor import ProcessedText, TextProcessor
 
 
 class TestTextProcessor:

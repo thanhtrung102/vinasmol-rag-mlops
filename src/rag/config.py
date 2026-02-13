@@ -83,7 +83,7 @@ class RAGConfig:
         if not path.exists():
             raise FileNotFoundError(f"Config file not found: {path}")
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             raw_config = yaml.safe_load(f)
 
         if raw_config is None:

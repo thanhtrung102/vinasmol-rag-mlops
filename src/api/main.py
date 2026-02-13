@@ -7,8 +7,9 @@ and system monitoring with caching and streaming support.
 import json
 import logging
 import time
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -108,7 +109,7 @@ config: RAGConfig | None = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """Application lifespan handler."""
     global rag_pipeline, rag_cache, config
 
@@ -276,7 +277,7 @@ async def query(request: QueryRequest):
     except Exception as e:
         REQUEST_COUNT.labels(endpoint="query", status="error").inc()
         logger.error(f"Query error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 async def stream_query_generator(
@@ -369,7 +370,7 @@ async def add_documents(request: DocumentRequest):
 
     except Exception as e:
         REQUEST_COUNT.labels(endpoint="documents", status="error").inc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/collection/info", response_model=CollectionInfo)
@@ -382,7 +383,7 @@ async def collection_info():
         info = rag_pipeline.retriever.get_collection_info()
         return CollectionInfo(**info)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.delete("/collection")
@@ -400,7 +401,7 @@ async def delete_collection():
 
         return {"status": "success", "message": "Collection deleted and recreated"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/cache/stats")

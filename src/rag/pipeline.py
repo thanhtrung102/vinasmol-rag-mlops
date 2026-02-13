@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
+from .generator import GenerationResult, RAGGenerator
 from .retriever import QdrantRetriever, RetrievedDocument
-from .generator import RAGGenerator, GenerationResult
 
 
 @dataclass

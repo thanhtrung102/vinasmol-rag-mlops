@@ -6,7 +6,7 @@ including retrieval, generation, and reranking steps.
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 from langfuse import Langfuse
 
@@ -18,9 +18,9 @@ class LangFuseTracer:
 
     def __init__(
         self,
-        public_key: Optional[str] = None,
-        secret_key: Optional[str] = None,
-        host: Optional[str] = None,
+        public_key: str | None = None,
+        secret_key: str | None = None,
+        host: str | None = None,
         enabled: bool = True,
     ):
         """Initialize LangFuse tracer.
@@ -58,7 +58,7 @@ class LangFuseTracer:
         sources: list[dict[str, Any]],
         latency_ms: float,
         cached: bool = False,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ):
         """Trace a complete RAG query.
 
@@ -101,7 +101,7 @@ class LangFuseTracer:
 
 
 # Global tracer instance
-_tracer: Optional[LangFuseTracer] = None
+_tracer: LangFuseTracer | None = None
 
 
 def get_tracer() -> LangFuseTracer:
@@ -117,9 +117,9 @@ def get_tracer() -> LangFuseTracer:
 
 
 def initialize_tracer(
-    public_key: Optional[str] = None,
-    secret_key: Optional[str] = None,
-    host: Optional[str] = None,
+    public_key: str | None = None,
+    secret_key: str | None = None,
+    host: str | None = None,
     enabled: bool = True,
 ) -> LangFuseTracer:
     """Initialize the global LangFuse tracer.

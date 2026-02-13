@@ -44,10 +44,10 @@ class RAGEvaluator:
             try:
                 # Try old import path (ragas < 0.2) - these are pre-instantiated
                 from ragas.metrics import (
-                    faithfulness,
                     answer_relevancy,
                     context_precision,
                     context_recall,
+                    faithfulness,
                 )
                 self._metrics = {
                     "faithfulness": faithfulness,

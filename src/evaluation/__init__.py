@@ -6,7 +6,7 @@ Provides comprehensive evaluation tools:
 - Vietnamese benchmark dataset
 """
 
-from src.evaluation.evaluate_rag import RAGEvaluator, RAGEvalResult
+from src.evaluation.evaluate_rag import RAGEvalResult, RAGEvaluator
 from src.evaluation.hallucination_detector import (
     AdvancedHallucinationDetector,
     HallucinationDetectionResult,

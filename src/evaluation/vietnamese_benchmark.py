@@ -222,7 +222,7 @@ class VietnameseBenchmark:
         """
         filepath = Path(filepath)
 
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             data = json.load(f)
 
         benchmark = cls()
@@ -284,10 +284,10 @@ def main():
         stats = benchmark.get_statistics()
         print("\n=== Vietnamese Benchmark Statistics ===")
         print(f"Total Questions: {stats['total_questions']}")
-        print(f"\nBy Category:")
+        print("\nBy Category:")
         for cat, count in stats['categories'].items():
             print(f"  {cat}: {count}")
-        print(f"\nBy Difficulty:")
+        print("\nBy Difficulty:")
         for diff, count in stats['difficulties'].items():
             print(f"  {diff}: {count}")
 

@@ -4,7 +4,6 @@ Uses cross-encoder models to rerank retrieved documents based on
 relevance to the query, improving precision over vector similarity alone.
 """
 
-from typing import Any
 
 from sentence_transformers import CrossEncoder
 
@@ -123,10 +122,7 @@ class HybridReranker:
         reranked = []
         for doc, ce_score in zip(documents, ce_scores):
             # Normalize original score
-            if score_range > 0:
-                norm_original = (doc.score - min_score) / score_range
-            else:
-                norm_original = 1.0
+            norm_original = (doc.score - min_score) / score_range if score_range > 0 else 1.0
 
             # Combine scores
             hybrid_score = self.alpha * float(ce_score) + (1 - self.alpha) * norm_original

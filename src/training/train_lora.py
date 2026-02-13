@@ -30,7 +30,6 @@ from peft import (
     prepare_model_for_kbit_training,
 )
 from transformers import (
-    AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
@@ -39,7 +38,6 @@ from transformers import (
     TrainerCallback,
     TrainingArguments,
 )
-from transformers.utils import cached_file
 
 from src.training.trainer_config import TrainerConfig
 
@@ -53,7 +51,7 @@ logger = logging.getLogger(__name__)
 class WandbMetricsCallback(TrainerCallback):
     """Callback to log additional metrics to W&B."""
 
-    def on_log(self, args, state, control, logs=None, **kwargs):
+    def on_log(self, _args, state, _control, logs=None, **_kwargs):
         """Log metrics to W&B on each logging step."""
         if logs is None:
             return
@@ -283,8 +281,8 @@ class VinaSmolLoRATrainer:
                         transformers_cache = Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules" / "vinai"
 
                         # Create both directory structures using the ACTUAL git SHA
-                        encoded_dir = transformers_cache / f"PhoGPT_hyphen_4B_hyphen_Chat" / git_sha
-                        regular_dir = transformers_cache / f"PhoGPT-4B-Chat" / git_sha
+                        encoded_dir = transformers_cache / "PhoGPT_hyphen_4B_hyphen_Chat" / git_sha
+                        regular_dir = transformers_cache / "PhoGPT-4B-Chat" / git_sha
 
                         encoded_dir.mkdir(parents=True, exist_ok=True)
                         regular_dir.mkdir(parents=True, exist_ok=True)
@@ -434,11 +432,7 @@ class VinaSmolLoRATrainer:
             if dataset_path:
                 logger.info(f"Loading dataset from: {dataset_path}")
                 path = Path(dataset_path)
-                if path.suffix == ".jsonl":
-                    dataset = load_dataset(
-                        "json", data_files=str(path), split="train"
-                    )
-                elif path.suffix == ".json":
+                if path.suffix == ".jsonl" or path.suffix == ".json":
                     dataset = load_dataset(
                         "json", data_files=str(path), split="train"
                     )
@@ -584,7 +578,6 @@ class VinaSmolLoRATrainer:
             return None
 
         try:
-            from huggingface_hub import HfApi
 
             logger.info(f"Pushing to HuggingFace Hub: {self.config.hub.repo_id}")
 

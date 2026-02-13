@@ -52,14 +52,14 @@ class AdvancedHallucinationDetector:
 
     def detect(
         self,
-        question: str,
+        _question: str,
         answer: str,
         contexts: list[str],
     ) -> HallucinationDetectionResult:
         """Detect hallucinations in the answer.
 
         Args:
-            question: The question asked.
+            _question: The question asked (unused, kept for API compatibility).
             answer: The generated answer.
             contexts: Retrieved context documents.
 
