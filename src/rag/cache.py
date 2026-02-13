@@ -43,11 +43,13 @@ class RAGCache:
                     port=port,
                     db=db,
                     decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
                 )
                 # Test connection
                 self.client.ping()
                 logger.info(f"Redis cache connected: {host}:{port}")
-            except redis.ConnectionError as e:
+            except (redis.ConnectionError, redis.TimeoutError) as e:
                 logger.warning(f"Redis connection failed: {e}. Caching disabled.")
                 self.enabled = False
                 self.client = None
