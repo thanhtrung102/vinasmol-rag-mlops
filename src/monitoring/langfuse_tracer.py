@@ -4,10 +4,9 @@ Provides decorators and context managers for tracing RAG pipeline operations,
 including retrieval, generation, and reranking steps.
 """
 
-import functools
 import logging
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from langfuse import Langfuse
 
