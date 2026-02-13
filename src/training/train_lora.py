@@ -273,18 +273,23 @@ class VinaSmolLoRATrainer:
                         )
                         logger.info(f"Files downloaded to: {snapshot_path}")
 
+                        # Extract the actual git SHA from the snapshot path
+                        # Path format: .../snapshots/<git_sha>/
+                        snapshot_path_obj = Path(snapshot_path)
+                        git_sha = snapshot_path_obj.name  # The snapshot directory name is the git SHA
+                        logger.info(f"Resolved git SHA: {git_sha}")
+
                         # Manually copy Python files to transformers_modules with BOTH names
                         transformers_cache = Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules" / "vinai"
 
-                        # Create both directory structures
-                        encoded_dir = transformers_cache / f"PhoGPT_hyphen_4B_hyphen_Chat" / self.config.model.revision
-                        regular_dir = transformers_cache / f"PhoGPT-4B-Chat" / self.config.model.revision
+                        # Create both directory structures using the ACTUAL git SHA
+                        encoded_dir = transformers_cache / f"PhoGPT_hyphen_4B_hyphen_Chat" / git_sha
+                        regular_dir = transformers_cache / f"PhoGPT-4B-Chat" / git_sha
 
                         encoded_dir.mkdir(parents=True, exist_ok=True)
                         regular_dir.mkdir(parents=True, exist_ok=True)
 
                         # Copy all Python and JSON files
-                        snapshot_path_obj = Path(snapshot_path)
                         copied_count = 0
                         for file_pattern in ["*.py", "*.json"]:
                             for source_file in snapshot_path_obj.glob(file_pattern):
