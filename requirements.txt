@@ -5,6 +5,7 @@ datasets>=2.16.0
 accelerate>=0.25.0
 peft==0.6.2  # Pinned for transformers 4.35.2 compatibility
 bitsandbytes>=0.41.0
+triton>=2.1.0  # Required by bitsandbytes for quantization
 sentencepiece>=0.1.99
 tokenizers>=0.15.0
 einops>=0.7.0
