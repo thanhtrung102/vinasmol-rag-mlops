@@ -13,7 +13,10 @@ This project implements an end-to-end MLOps pipeline for:
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/YOUR_USERNAME/vinasmol-rag-mlops)
 
-**Requirements**: 4-core, 16GB RAM, 32GB storage Codespace
+**Requirements**:
+- 4-core, 16GB RAM, 32GB storage Codespace
+- **GPU required for training** (use GPU-enabled Codespace or cloud GPU instance)
+- Standard Codespaces work for API/RAG features only
 
 ```bash
 # Setup is automatic via postCreateCommand
@@ -23,9 +26,17 @@ make setup
 # Start all services
 make services-up
 
-# Run tests
+# Run tests (doesn't require GPU)
 make test
 ```
+
+### For Training (Requires GPU)
+
+Use one of these GPU-enabled environments:
+- **GitHub Codespaces**: GPU-enabled instance (select GPU machine type)
+- **Google Colab**: Free T4 GPU available
+- **Kaggle Notebooks**: Free GPU available
+- **Local**: NVIDIA GPU with CUDA 11.8+
 
 ## Architecture
 
