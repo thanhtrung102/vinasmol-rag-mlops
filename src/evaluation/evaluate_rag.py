@@ -42,29 +42,29 @@ class RAGEvaluator:
         """Lazy load Ragas metrics."""
         if self._metrics is None:
             try:
-                # Try new import path (ragas >= 0.2)
-                from ragas.metrics.collections import (
-                    faithfulness,
-                    answer_relevancy,
-                    context_precision,
-                    context_recall,
-                )
-            except ImportError:
-                # Fallback to old import path
+                # Try old import path (ragas < 0.2) - these are pre-instantiated
                 from ragas.metrics import (
                     faithfulness,
                     answer_relevancy,
                     context_precision,
                     context_recall,
                 )
+                self._metrics = {
+                    "faithfulness": faithfulness,
+                    "answer_relevancy": answer_relevancy,
+                    "context_precision": context_precision,
+                    "context_recall": context_recall,
+                }
+            except (ImportError, AttributeError):
+                # Try new structure (ragas >= 0.2)
+                from ragas import metrics as ragas_metrics
 
-            # Instantiate metrics (Ragas requires initialized objects)
-            self._metrics = {
-                "faithfulness": faithfulness(),
-                "answer_relevancy": answer_relevancy(),
-                "context_precision": context_precision(),
-                "context_recall": context_recall(),
-            }
+                self._metrics = {
+                    "faithfulness": ragas_metrics.faithfulness,
+                    "answer_relevancy": ragas_metrics.answer_relevancy,
+                    "context_precision": ragas_metrics.context_precision,
+                    "context_recall": ragas_metrics.context_recall,
+                }
         return self._metrics
 
     def prepare_dataset(
