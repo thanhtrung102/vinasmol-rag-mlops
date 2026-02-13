@@ -30,6 +30,7 @@ from peft import (
     prepare_model_for_kbit_training,
 )
 from transformers import (
+    AutoConfig,
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
@@ -38,6 +39,7 @@ from transformers import (
     TrainerCallback,
     TrainingArguments,
 )
+from transformers.utils import cached_file
 
 from src.training.trainer_config import TrainerConfig
 
@@ -122,12 +124,65 @@ class VinaSmolLoRATrainer:
         except Exception as e:
             logger.warning(f"Failed to initialize W&B: {e}")
 
+    def _fix_transformers_cache_paths(self) -> None:
+        """Fix HuggingFace cache path encoding issues for models with hyphens.
+
+        Transformers creates paths like 'PhoGPT_hyphen_4B_hyphen_Chat' but then
+        looks for files in the original path. This creates symlinks to fix it.
+        """
+        cache_base = Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules" / "vinai"
+
+        if not cache_base.exists():
+            return
+
+        # Find both encoded and non-encoded paths
+        encoded_paths = list(cache_base.glob("PhoGPT_hyphen_*"))
+        regular_paths = list(cache_base.glob("PhoGPT-*"))
+
+        for encoded_path in encoded_paths:
+            # Get the non-encoded version
+            non_encoded_name = encoded_path.name.replace("_hyphen_", "-")
+            non_encoded_path = encoded_path.parent / non_encoded_name
+
+            if encoded_path.exists() and not non_encoded_path.exists():
+                logger.info(f"Creating symlink: {non_encoded_path} -> {encoded_path}")
+                try:
+                    # On Windows, use junction; on Unix, use symlink
+                    if os.name == 'nt':
+                        import subprocess
+                        subprocess.run(['mklink', '/J', str(non_encoded_path), str(encoded_path)],
+                                     shell=True, check=False, capture_output=True)
+                    else:
+                        non_encoded_path.symlink_to(encoded_path)
+                except Exception as e:
+                    logger.warning(f"Failed to create symlink: {e}")
+
+        for regular_path in regular_paths:
+            # Get the encoded version
+            encoded_name = regular_path.name.replace("-", "_hyphen_")
+            encoded_path = regular_path.parent / encoded_name
+
+            if regular_path.exists() and not encoded_path.exists():
+                logger.info(f"Creating symlink: {encoded_path} -> {regular_path}")
+                try:
+                    if os.name == 'nt':
+                        import subprocess
+                        subprocess.run(['mklink', '/J', str(encoded_path), str(regular_path)],
+                                     shell=True, check=False, capture_output=True)
+                    else:
+                        encoded_path.symlink_to(regular_path)
+                except Exception as e:
+                    logger.warning(f"Failed to create symlink: {e}")
+
     def load_model(self) -> None:
         """Load the base model with quantization and apply LoRA."""
         logger.info(f"Loading model: {self.config.model.name}")
 
         # Initialize model as None for retry logic
         self.model = None
+
+        # Try to fix cache path issues before loading
+        self._fix_transformers_cache_paths()
 
         # Quantization config for memory efficiency
         bnb_config = BitsAndBytesConfig(
@@ -175,19 +230,64 @@ class VinaSmolLoRATrainer:
                 # HuggingFace cache corruption - clear and retry
                 if "flash_attn" in str(e) and attempt < max_retries - 1:
                     logger.warning(f"Cache corruption detected: {e}")
-                    logger.info("Clearing transformers module cache...")
+                    logger.info("Clearing HuggingFace caches completely...")
 
-                    # Clear the corrupted cache
-                    cache_dir = Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules"
-                    model_slug = self.config.model.name.replace("/", "--")
+                    # Clear transformers_modules cache
+                    cache_dir = Path.home() / ".cache" / "huggingface"
+                    transformers_modules = cache_dir / "modules" / "transformers_modules"
+                    hub_cache = cache_dir / "hub"
 
-                    for pattern in [f"*{model_slug}*", "*PhoGPT*"]:
-                        for cache_path in cache_dir.glob(pattern):
-                            logger.info(f"Removing: {cache_path}")
-                            shutil.rmtree(cache_path, ignore_errors=True)
+                    # Remove all PhoGPT related caches
+                    removed_count = 0
+                    if transformers_modules.exists():
+                        for cache_path in transformers_modules.glob("*"):
+                            if "PhoGPT" in cache_path.name or "vinai" in cache_path.name:
+                                logger.info(f"Removing transformers module: {cache_path}")
+                                shutil.rmtree(cache_path, ignore_errors=True)
+                                removed_count += 1
 
-                    logger.info("Cache cleared, retrying download...")
-                    continue
+                    if hub_cache.exists():
+                        for cache_path in hub_cache.glob("models--*"):
+                            if "PhoGPT" in cache_path.name or "vinai" in cache_path.name:
+                                logger.info(f"Removing hub cache: {cache_path}")
+                                shutil.rmtree(cache_path, ignore_errors=True)
+                                removed_count += 1
+
+                    logger.info(f"Removed {removed_count} cache entries. Retrying with force_download...")
+
+                    # Retry with force_download to bypass cache
+                    try:
+                        # Try to fix cache paths after clearing
+                        import time
+                        time.sleep(0.5)  # Give filesystem time to sync
+                        self._fix_transformers_cache_paths()
+
+                        self.model = AutoModelForCausalLM.from_pretrained(
+                            self.config.model.name,
+                            revision=self.config.model.revision,
+                            quantization_config=bnb_config,
+                            device_map="auto",
+                            trust_remote_code=self.config.model.trust_remote_code,
+                            attn_implementation="eager",
+                            low_cpu_mem_usage=True,
+                            force_download=True,  # Force fresh download
+                        )
+                        break
+                    except FileNotFoundError as path_error:
+                        if "flash_attn" in str(path_error):
+                            logger.warning(f"Path issue persists: {path_error}")
+                            # Try one more time to fix paths
+                            time.sleep(0.5)
+                            self._fix_transformers_cache_paths()
+                            last_error = path_error
+                            continue
+                        else:
+                            last_error = path_error
+                            continue
+                    except Exception as retry_error:
+                        logger.error(f"Force download also failed: {retry_error}")
+                        last_error = retry_error
+                        continue
                 else:
                     last_error = e
 
