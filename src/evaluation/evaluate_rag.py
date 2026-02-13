@@ -58,11 +58,12 @@ class RAGEvaluator:
                     context_recall,
                 )
 
+            # Instantiate metrics (Ragas requires initialized objects)
             self._metrics = {
-                "faithfulness": faithfulness,
-                "answer_relevancy": answer_relevancy,
-                "context_precision": context_precision,
-                "context_recall": context_recall,
+                "faithfulness": faithfulness(),
+                "answer_relevancy": answer_relevancy(),
+                "context_precision": context_precision(),
+                "context_recall": context_recall(),
             }
         return self._metrics
 
