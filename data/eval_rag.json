@@ -1,0 +1,34 @@
+{
+  "questions": [
+    "What is the capital of Vietnam?",
+    "What is Pho?",
+    "When was Vietnam unified?"
+  ],
+  "answers": [
+    "Hanoi is the capital of Vietnam. It is located in the northern part of the country and has been the capital since 1976.",
+    "Pho is a Vietnamese soup dish consisting of broth, rice noodles, herbs, and meat, usually beef or chicken.",
+    "Vietnam was unified on April 30, 1975, when Saigon fell to North Vietnamese forces, ending the Vietnam War."
+  ],
+  "contexts": [
+    [
+      "Hanoi is the capital of Vietnam.",
+      "Vietnam is a country in Southeast Asia.",
+      "Hanoi has been the capital of Vietnam since 1976 after reunification."
+    ],
+    [
+      "Pho is a Vietnamese soup consisting of broth, rice noodles (bánh phở), herbs, and meat.",
+      "It is one of the most popular dishes in Vietnamese cuisine.",
+      "Pho can be served with beef (phở bò) or chicken (phở gà)."
+    ],
+    [
+      "The Fall of Saigon was the capture of Saigon by North Vietnam on April 30, 1975.",
+      "This event marked the end of the Vietnam War and the reunification of Vietnam.",
+      "Vietnam was officially reunified as the Socialist Republic of Vietnam on July 2, 1976."
+    ]
+  ],
+  "ground_truths": [
+    "Hanoi is the capital of Vietnam.",
+    "Pho is a traditional Vietnamese soup made with broth, rice noodles, herbs, and meat.",
+    "Vietnam was unified on April 30, 1975, after the Fall of Saigon."
+  ]
+}
