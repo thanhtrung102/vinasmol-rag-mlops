@@ -132,13 +132,12 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Wait for Qdrant
+      - name: Wait for services
         run: |
           timeout 30 bash -c 'until curl -s http://localhost:6333/health; do sleep 1; done'
-
-      - name: Wait for Redis
-        run: |
-          timeout 30 bash -c 'until redis-cli ping; do sleep 1; done'
+          echo "Qdrant is ready"
+          timeout 30 bash -c 'until nc -z localhost 6379; do sleep 1; done'
+          echo "Redis is ready"
 
       - name: Run integration tests
         run: pytest tests/integration -v --tb=short
