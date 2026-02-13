@@ -1,0 +1,32 @@
+# RAG System Configuration
+
+retriever:
+  collection_name: "vietnamese_docs"
+  embedding_model: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+  host: "localhost"
+  port: 6333
+  top_k: 5
+  score_threshold: 0.5
+
+generator:
+  model_name: "vinai/PhoGPT-4B-Chat"
+  device: null  # auto-detect (cuda if available, else cpu)
+  load_in_8bit: true
+  max_new_tokens: 256
+  temperature: 0.7
+  top_p: 0.9
+  prompt_template: null  # Use default Vietnamese prompt
+
+reranker:
+  enabled: false  # Enable for better retrieval quality (adds latency)
+  model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  use_hybrid: true  # Combine vector similarity + cross-encoder scores
+  hybrid_alpha: 0.5  # Weight for cross-encoder (0=vector only, 1=cross-encoder only)
+  top_k: null  # Keep all reranked results
+
+cache:
+  enabled: true
+  host: "localhost"
+  port: 6379
+  db: 0
+  ttl: 3600  # Cache TTL in seconds (1 hour)

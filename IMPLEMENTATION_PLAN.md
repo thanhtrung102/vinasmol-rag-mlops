@@ -182,8 +182,8 @@ Pipeline   Infra       System     Framework    Stack      Terraform   Pipeline
 | Phase | Focus | Status |
 |-------|-------|--------|
 | **Phase 1** | Data Pipeline | ✅ Implemented |
-| **Phase 2** | Training Infrastructure | 🔲 Pending |
-| **Phase 3** | RAG System | 🔲 Pending |
+| **Phase 2** | Training Infrastructure | ✅ Implemented |
+| **Phase 3** | RAG System | ✅ Implemented |
 | **Phase 4** | Evaluation Framework | 🔲 Pending |
 | **Phase 5** | Monitoring Stack | 🔲 Pending |
 | **Phase 6** | Infrastructure as Code | 🔲 Pending |
@@ -227,25 +227,37 @@ make test  # 17 passed, 2 fixed
 
 ---
 
-### Phase 2: Training Infrastructure 🔲
+### Phase 2: Training Infrastructure ✅ COMPLETE
 
 **Goal**: Configure MLflow + W&B tracking, implement LoRA fine-tuning
 
 **Tasks**:
 
-- [ ] Set up MLflow server with artifact storage
-- [ ] Integrate Weights & Biases for prompt tracking
-- [ ] Implement LoRA training script (memory-optimized for 16GB)
-- [ ] Create training config YAML schema
-- [ ] Add model checkpointing and resumption
-- [ ] Push trained adapters to HuggingFace Hub
+- [x] Set up MLflow server with artifact storage
+- [x] Integrate Weights & Biases for prompt tracking
+- [x] Implement LoRA training script (memory-optimized for 16GB)
+- [x] Create training config YAML schema
+- [x] Add model checkpointing and resumption
+- [x] Push trained adapters to HuggingFace Hub
 
 **Key Files**:
 ```
 src/training/
-├── train_lora.py        # LoRA fine-tuning (implemented, needs testing)
-└── trainer_config.py    # Configuration dataclass
+├── __init__.py          # Module exports
+├── train_lora.py        # LoRA fine-tuning with full MLOps integration
+└── trainer_config.py    # Configuration dataclass with YAML loader
 ```
+
+**Features Implemented**:
+
+| Feature | Implementation | File |
+|---------|---------------|------|
+| YAML Config Loading | TrainerConfig.from_yaml() with validation | `trainer_config.py` |
+| MLflow Tracking | Experiment, params, metrics, artifacts | `train_lora.py` |
+| W&B Integration | Optional logging with WandbMetricsCallback | `train_lora.py` |
+| Checkpoint Resumption | --resume CLI flag + config option | `train_lora.py` |
+| HuggingFace Hub Push | push_to_hub() with --push-to-hub flag | `train_lora.py` |
+| Memory Optimization | 4-bit quantization, gradient checkpointing | `training_config.yaml` |
 
 **Memory Optimization** (for Codespaces 16GB):
 ```python
@@ -262,50 +274,100 @@ training:
   optim: "paged_adamw_8bit"
 ```
 
+**Demo Commands**:
+```bash
+# Basic training
+make train-lora
+
+# Resume from checkpoint
+make train-lora-resume CHECKPOINT=./outputs/vinasmol-lora/checkpoint-100
+
+# Train and push to HuggingFace Hub
+make train-lora-push
+```
+
 **Acceptance Criteria**:
-- [ ] MLflow UI accessible at `localhost:8080`
-- [ ] Training run logged with params/metrics
-- [ ] LoRA adapter saved and loadable
-- [ ] Training completes without OOM on 16GB RAM
+- [x] MLflow UI accessible at `localhost:8080`
+- [x] Training run logged with params/metrics
+- [x] LoRA adapter saved and loadable
+- [x] Training completes without OOM on 16GB RAM
 
 ---
 
-### Phase 3: RAG System 🔲
+### Phase 3: RAG System ✅ COMPLETE
 
 **Goal**: Build Qdrant vector store, FastAPI gateway, integrate LLM serving
 
 **Tasks**:
 
-- [ ] Initialize Qdrant collection with Vietnamese embeddings
-- [ ] Implement document ingestion endpoint
-- [ ] Create RAG query pipeline (retrieve → rerank → generate)
-- [ ] Add streaming response support
-- [ ] Implement caching layer (Redis)
+- [x] Initialize Qdrant collection with Vietnamese embeddings
+- [x] Implement document ingestion endpoint
+- [x] Create RAG query pipeline (retrieve → rerank → generate)
+- [x] Add streaming response support
+- [x] Implement caching layer (Redis)
 
 **Key Files**:
 ```
 src/rag/
-├── retriever.py    # Qdrant integration (implemented)
-├── generator.py    # LLM generation (implemented)
-└── pipeline.py     # End-to-end RAG (implemented)
+├── __init__.py       # Module exports
+├── retriever.py      # Qdrant integration
+├── generator.py      # LLM generation
+├── pipeline.py       # End-to-end RAG
+├── reranker.py       # Document reranking (cross-encoder + hybrid)
+├── cache.py          # Redis caching layer
+└── config.py         # Configuration management
 
 src/api/
-└── main.py         # FastAPI endpoints (implemented)
+└── main.py           # FastAPI endpoints with streaming
+
+configs/
+└── rag_config.yaml   # RAG system configuration
 ```
+
+**Features Implemented**:
+
+| Feature | Implementation | File |
+|---------|---------------|------|
+| Vector Retrieval | Qdrant semantic search | `retriever.py` |
+| Document Reranking | Cross-encoder + hybrid scoring | `reranker.py` |
+| LLM Generation | Vietnamese prompt templates | `generator.py` |
+| Redis Caching | Query result caching with TTL | `cache.py` |
+| Configuration | YAML-based config management | `config.py` |
+| Streaming | Server-sent events | `main.py` |
 
 **API Endpoints**:
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/query` | POST | RAG query with sources |
+| `/health` | GET | Health check with service status |
+| `/query` | POST | RAG query with caching |
+| `/query/stream` | POST | Streaming RAG query |
 | `/documents` | POST | Document ingestion |
+| `/collection/info` | GET | Collection statistics |
+| `/collection` | DELETE | Delete collection |
+| `/cache/stats` | GET | Cache statistics |
+| `/cache` | DELETE | Clear cache |
 | `/metrics` | GET | Prometheus metrics |
 
+**Demo Commands**:
+```bash
+# Start services
+make services-up
+
+# Start API server
+make api
+
+# Run Phase 3 demo
+python scripts/demo_phase3.py
+
+# Test API
+curl http://localhost:8000/health
+```
+
 **Acceptance Criteria**:
-- [ ] Qdrant running via Docker Compose
-- [ ] Documents indexed with Vietnamese embeddings
-- [ ] Query returns answer + source citations
-- [ ] Latency < 2s for typical queries
+- [x] Qdrant running via Docker Compose
+- [x] Documents indexed with Vietnamese embeddings
+- [x] Query returns answer + source citations
+- [x] Latency < 2s for typical queries (with caching)
 
 ---
 
@@ -533,7 +595,7 @@ vinasmol-rag-mlops/
 │   ├── evaluation/         # RAG evaluation
 │   ├── monitoring/         # Observability
 │   ├── rag/                # RAG components
-│   └── training/           # Model fine-tuning
+│   └── training/           # Model fine-tuning ✅
 ├── tests/                   # Unit & integration tests
 ├── docker-compose.yaml      # Local services
 ├── Makefile                 # Development commands
@@ -545,10 +607,11 @@ vinasmol-rag-mlops/
 
 ## Next Steps
 
-1. **Immediate**: Complete Phase 2 (Training Infrastructure)
-2. **This Week**: Phase 3 (RAG System) + Phase 4 (Evaluation)
-3. **Next Week**: Phase 5-7 (Monitoring, IaC, CI/CD)
-4. **Portfolio Ready**: All phases complete with documentation
+1. ~~**Immediate**: Complete Phase 2 (Training Infrastructure)~~ ✅ Done
+2. ~~**Immediate**: Complete Phase 3 (RAG System)~~ ✅ Done
+3. **Immediate**: Complete Phase 4 (Evaluation Framework)
+4. **Next**: Phase 5-7 (Monitoring, IaC, CI/CD)
+5. **Portfolio Ready**: All phases complete with documentation
 
 ---
 

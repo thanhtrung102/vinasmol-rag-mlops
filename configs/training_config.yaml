@@ -43,9 +43,31 @@ data:
 output:
   dir: "./outputs/vinasmol-lora"
   save_strategy: "epoch"
+  save_total_limit: 3
   logging_steps: 10
+  resume_from_checkpoint: null
 
 mlflow:
   experiment_name: "vinasmol-lora-training"
   tracking_uri: "http://localhost:8080"
   log_model: true
+  run_name: null
+
+# Weights & Biases integration (optional)
+wandb:
+  enabled: false
+  project: "vinasmol-rag-mlops"
+  entity: null
+  run_name: null
+  log_model: "checkpoint"
+  tags:
+    - vinasmol
+    - lora
+    - vietnamese
+
+# HuggingFace Hub publishing (optional)
+hub:
+  enabled: false
+  repo_id: null  # e.g., "your-username/vinasmol-lora"
+  private: true
+  commit_message: "Upload VinaSmol LoRA adapter"

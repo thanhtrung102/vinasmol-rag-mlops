@@ -102,7 +102,13 @@ train:
 	python -m src.training.train --config configs/training_config.yaml
 
 train-lora:
-	python -m src.training.train_lora --config configs/lora_config.yaml
+	python -m src.training.train_lora --config configs/training_config.yaml
+
+train-lora-resume:
+	python -m src.training.train_lora --config configs/training_config.yaml --resume $(CHECKPOINT)
+
+train-lora-push:
+	python -m src.training.train_lora --config configs/training_config.yaml --push-to-hub
 
 # =============================================================================
 # EVALUATION
