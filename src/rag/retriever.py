@@ -91,9 +91,7 @@ class QdrantRetriever:
                     vector=embedding.tolist(),
                     payload={"content": doc, **meta},
                 )
-                for j, (doc, embedding, meta) in enumerate(
-                    zip(batch_docs, embeddings, batch_meta)
-                )
+                for j, (doc, embedding, meta) in enumerate(zip(batch_docs, embeddings, batch_meta))
             ]
 
             self.client.upsert(collection_name=self.collection_name, points=points)

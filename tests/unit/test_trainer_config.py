@@ -163,9 +163,7 @@ model:
 training:
   num_epochs: 5
 """
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(yaml_content)
             f.flush()
             config = TrainerConfig.from_yaml(f.name)
@@ -214,9 +212,7 @@ hub:
   repo_id: "user/model"
   private: false
 """
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(yaml_content)
             f.flush()
             config = TrainerConfig.from_yaml(f.name)

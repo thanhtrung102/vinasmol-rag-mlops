@@ -135,9 +135,7 @@ class TextProcessor:
         quality_score = self.calculate_quality_score(cleaned)
 
         is_valid = (
-            word_count >= self.min_words
-            and char_count >= self.min_chars
-            and quality_score >= 0.5
+            word_count >= self.min_words and char_count >= self.min_chars and quality_score >= 0.5
         )
 
         return ProcessedText(

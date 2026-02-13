@@ -88,7 +88,7 @@ Trả lời:"""
             Generated answer with metadata.
         """
         # Format context
-        context = "\n\n".join(f"[{i+1}] {doc}" for i, doc in enumerate(context_docs))
+        context = "\n\n".join(f"[{i + 1}] {doc}" for i, doc in enumerate(context_docs))
 
         # Build prompt
         prompt = self.prompt_template.format(context=context, question=question)

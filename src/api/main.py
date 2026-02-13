@@ -346,7 +346,9 @@ async def add_documents(request: DocumentRequest):
         rag_pipeline.initialize(
             collection_name=config.retriever.collection_name if config else "vietnamese_docs",
             model_name=config.generator.model_name if config else "vinai/PhoGPT-4B-Chat",
-            embedding_model=config.retriever.embedding_model if config else "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+            embedding_model=config.retriever.embedding_model
+            if config
+            else "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
         )
         rag_pipeline.retriever.create_collection()
         logger.info("RAG pipeline initialized")

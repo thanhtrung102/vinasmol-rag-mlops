@@ -4,7 +4,6 @@ Uses cross-encoder models to rerank retrieved documents based on
 relevance to the query, improving precision over vector similarity alone.
 """
 
-
 from sentence_transformers import CrossEncoder
 
 from .retriever import RetrievedDocument

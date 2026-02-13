@@ -93,9 +93,7 @@ class AdvancedHallucinationDetector:
 
         if entity_match_score < self.entity_threshold:
             is_hallucinated = True
-            reasons.append(
-                f"Low entity match ({entity_match_score:.2f} < {self.entity_threshold})"
-            )
+            reasons.append(f"Low entity match ({entity_match_score:.2f} < {self.entity_threshold})")
 
         # Calculate confidence
         scores = [faithfulness_score, consistency_score, entity_match_score]
@@ -211,9 +209,7 @@ class AdvancedHallucinationDetector:
         combined_context = " ".join(contexts).lower()
 
         # Check how many entities appear in context
-        matched = sum(
-            1 for entity in answer_entities if entity.lower() in combined_context
-        )
+        matched = sum(1 for entity in answer_entities if entity.lower() in combined_context)
 
         return matched / len(answer_entities)
 
@@ -238,7 +234,7 @@ class AdvancedHallucinationDetector:
             # Check if word is capitalized and not after punctuation
             if word and word[0].isupper() and len(word) > 1:
                 # Clean punctuation
-                clean_word = re.sub(r'[^\w\s]', '', word)
+                clean_word = re.sub(r"[^\w\s]", "", word)
                 if clean_word:
                     entities.append(clean_word)
 
@@ -254,7 +250,7 @@ class AdvancedHallucinationDetector:
             List of tokens.
         """
         # Remove punctuation and split
-        text = re.sub(r'[^\w\s]', ' ', text)
+        text = re.sub(r"[^\w\s]", " ", text)
         return [t for t in text.split() if len(t) > 2]  # Filter short words
 
 

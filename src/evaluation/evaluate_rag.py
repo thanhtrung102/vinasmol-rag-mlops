@@ -49,6 +49,7 @@ class RAGEvaluator:
                     context_recall,
                     faithfulness,
                 )
+
                 self._metrics = {
                     "faithfulness": faithfulness,
                     "answer_relevancy": answer_relevancy,
@@ -227,14 +228,16 @@ def log_evaluation_to_mlflow(result: RAGEvalResult, run_name: str = "rag_evaluat
         run_name: Name for the MLflow run.
     """
     with mlflow.start_run(run_name=run_name):
-        mlflow.log_metrics({
-            "faithfulness": result.faithfulness,
-            "answer_relevance": result.answer_relevance,
-            "context_relevance": result.context_relevance,
-            "context_recall": result.context_recall,
-            "hallucination_score": result.hallucination_score,
-            "overall_score": result.overall_score,
-        })
+        mlflow.log_metrics(
+            {
+                "faithfulness": result.faithfulness,
+                "answer_relevance": result.answer_relevance,
+                "context_relevance": result.context_relevance,
+                "context_recall": result.context_recall,
+                "hallucination_score": result.hallucination_score,
+                "overall_score": result.overall_score,
+            }
+        )
 
         mlflow.log_dict(result.details, "evaluation_details.json")
 
@@ -267,29 +270,33 @@ def main():
     log_evaluation_to_mlflow(result)
 
     # Print results
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("RAG Evaluation Results")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"Faithfulness:      {result.faithfulness:.3f}")
     print(f"Answer Relevance:  {result.answer_relevance:.3f}")
     print(f"Context Relevance: {result.context_relevance:.3f}")
     print(f"Context Recall:    {result.context_recall:.3f}")
     print(f"Hallucination:     {result.hallucination_score:.3f}")
     print(f"Overall Score:     {result.overall_score:.3f}")
-    print(f"{'='*50}\n")
+    print(f"{'=' * 50}\n")
 
     # Save results
     if args.output:
         with open(args.output, "w") as f:
-            json.dump({
-                "faithfulness": result.faithfulness,
-                "answer_relevance": result.answer_relevance,
-                "context_relevance": result.context_relevance,
-                "context_recall": result.context_recall,
-                "hallucination_score": result.hallucination_score,
-                "overall_score": result.overall_score,
-                "details": result.details,
-            }, f, indent=2)
+            json.dump(
+                {
+                    "faithfulness": result.faithfulness,
+                    "answer_relevance": result.answer_relevance,
+                    "context_relevance": result.context_relevance,
+                    "context_recall": result.context_recall,
+                    "hallucination_score": result.hallucination_score,
+                    "overall_score": result.overall_score,
+                    "details": result.details,
+                },
+                f,
+                indent=2,
+            )
 
 
 if __name__ == "__main__":

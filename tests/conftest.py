@@ -35,7 +35,9 @@ def sample_qa_pairs():
         {
             "question": "Hà Nội nổi tiếng với điều gì?",
             "answer": "Hà Nội nổi tiếng với các di tích lịch sử và ẩm thực đường phố.",
-            "context": ["Hà Nội là thủ đô của Việt Nam, nổi tiếng với các di tích lịch sử và ẩm thực đường phố."],
+            "context": [
+                "Hà Nội là thủ đô của Việt Nam, nổi tiếng với các di tích lịch sử và ẩm thực đường phố."
+            ],
         },
     ]
 

@@ -31,9 +31,7 @@ class LangFuseTracer:
             host: LangFuse host URL (or from LANGFUSE_HOST env)
             enabled: Whether tracing is enabled
         """
-        self.enabled = enabled and bool(
-            public_key or os.getenv("LANGFUSE_PUBLIC_KEY")
-        )
+        self.enabled = enabled and bool(public_key or os.getenv("LANGFUSE_PUBLIC_KEY"))
 
         if self.enabled:
             try:

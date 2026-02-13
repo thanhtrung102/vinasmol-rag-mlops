@@ -90,9 +90,7 @@ class VinaSmolLoRATrainer:
     def setup_tracking(self) -> None:
         """Set up experiment tracking (MLflow and optionally W&B)."""
         # MLflow setup
-        mlflow_uri = os.getenv(
-            "MLFLOW_TRACKING_URI", self.config.mlflow.tracking_uri
-        )
+        mlflow_uri = os.getenv("MLFLOW_TRACKING_URI", self.config.mlflow.tracking_uri)
         mlflow.set_tracking_uri(mlflow_uri)
         mlflow.set_experiment(self.config.mlflow.experiment_name)
         logger.info(f"MLflow tracking URI: {mlflow_uri}")
@@ -128,7 +126,9 @@ class VinaSmolLoRATrainer:
         Transformers creates paths like 'PhoGPT_hyphen_4B_hyphen_Chat' but then
         looks for files in the original path. This creates symlinks to fix it.
         """
-        cache_base = Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules" / "vinai"
+        cache_base = (
+            Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules" / "vinai"
+        )
 
         if not cache_base.exists():
             return
@@ -146,10 +146,15 @@ class VinaSmolLoRATrainer:
                 logger.info(f"Creating symlink: {non_encoded_path} -> {encoded_path}")
                 try:
                     # On Windows, use junction; on Unix, use symlink
-                    if os.name == 'nt':
+                    if os.name == "nt":
                         import subprocess
-                        subprocess.run(['mklink', '/J', str(non_encoded_path), str(encoded_path)],
-                                     shell=True, check=False, capture_output=True)
+
+                        subprocess.run(
+                            ["mklink", "/J", str(non_encoded_path), str(encoded_path)],
+                            shell=True,
+                            check=False,
+                            capture_output=True,
+                        )
                     else:
                         non_encoded_path.symlink_to(encoded_path)
                 except Exception as e:
@@ -163,10 +168,15 @@ class VinaSmolLoRATrainer:
             if regular_path.exists() and not encoded_path.exists():
                 logger.info(f"Creating symlink: {encoded_path} -> {regular_path}")
                 try:
-                    if os.name == 'nt':
+                    if os.name == "nt":
                         import subprocess
-                        subprocess.run(['mklink', '/J', str(encoded_path), str(regular_path)],
-                                     shell=True, check=False, capture_output=True)
+
+                        subprocess.run(
+                            ["mklink", "/J", str(encoded_path), str(regular_path)],
+                            shell=True,
+                            check=False,
+                            capture_output=True,
+                        )
                     else:
                         encoded_path.symlink_to(regular_path)
                 except Exception as e:
@@ -185,9 +195,7 @@ class VinaSmolLoRATrainer:
         # Quantization config for memory efficiency
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=self.config.quantization.load_in_4bit,
-            bnb_4bit_compute_dtype=getattr(
-                torch, self.config.quantization.bnb_4bit_compute_dtype
-            ),
+            bnb_4bit_compute_dtype=getattr(torch, self.config.quantization.bnb_4bit_compute_dtype),
             bnb_4bit_quant_type=self.config.quantization.bnb_4bit_quant_type,
             bnb_4bit_use_double_quant=self.config.quantization.use_double_quant,
         )
@@ -251,11 +259,14 @@ class VinaSmolLoRATrainer:
                                 shutil.rmtree(cache_path, ignore_errors=True)
                                 removed_count += 1
 
-                    logger.info(f"Removed {removed_count} cache entries. Retrying with force_download...")
+                    logger.info(
+                        f"Removed {removed_count} cache entries. Retrying with force_download..."
+                    )
 
                     # Retry by manually populating transformers_modules cache
                     try:
                         import time
+
                         time.sleep(0.5)  # Give filesystem time to sync
 
                         # Download files to hub cache first
@@ -274,11 +285,20 @@ class VinaSmolLoRATrainer:
                         # Extract the actual git SHA from the snapshot path
                         # Path format: .../snapshots/<git_sha>/
                         snapshot_path_obj = Path(snapshot_path)
-                        git_sha = snapshot_path_obj.name  # The snapshot directory name is the git SHA
+                        git_sha = (
+                            snapshot_path_obj.name
+                        )  # The snapshot directory name is the git SHA
                         logger.info(f"Resolved git SHA: {git_sha}")
 
                         # Manually copy Python files to transformers_modules with BOTH names
-                        transformers_cache = Path.home() / ".cache" / "huggingface" / "modules" / "transformers_modules" / "vinai"
+                        transformers_cache = (
+                            Path.home()
+                            / ".cache"
+                            / "huggingface"
+                            / "modules"
+                            / "transformers_modules"
+                            / "vinai"
+                        )
 
                         # Create both directory structures using the ACTUAL git SHA
                         encoded_dir = transformers_cache / "PhoGPT_hyphen_4B_hyphen_Chat" / git_sha
@@ -313,6 +333,7 @@ class VinaSmolLoRATrainer:
                     except Exception as retry_error:
                         logger.error(f"Manual cache population failed: {retry_error}")
                         import traceback
+
                         logger.error(traceback.format_exc())
                         last_error = retry_error
                         continue
@@ -389,9 +410,7 @@ class VinaSmolLoRATrainer:
         # Quantization config
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=self.config.quantization.load_in_4bit,
-            bnb_4bit_compute_dtype=getattr(
-                torch, self.config.quantization.bnb_4bit_compute_dtype
-            ),
+            bnb_4bit_compute_dtype=getattr(torch, self.config.quantization.bnb_4bit_compute_dtype),
             bnb_4bit_quant_type=self.config.quantization.bnb_4bit_quant_type,
             bnb_4bit_use_double_quant=self.config.quantization.use_double_quant,
         )
@@ -433,9 +452,7 @@ class VinaSmolLoRATrainer:
                 logger.info(f"Loading dataset from: {dataset_path}")
                 path = Path(dataset_path)
                 if path.suffix == ".jsonl" or path.suffix == ".json":
-                    dataset = load_dataset(
-                        "json", data_files=str(path), split="train"
-                    )
+                    dataset = load_dataset("json", data_files=str(path), split="train")
                 else:
                     # Assume HuggingFace dataset
                     dataset = load_dataset(dataset_path, split="train")
@@ -486,9 +503,7 @@ class VinaSmolLoRATrainer:
         # Check for checkpoint resumption
         resume_checkpoint = self.config.output.resume_from_checkpoint
         if resume_checkpoint and not Path(resume_checkpoint).exists():
-            logger.warning(
-                f"Checkpoint path {resume_checkpoint} not found. Starting fresh."
-            )
+            logger.warning(f"Checkpoint path {resume_checkpoint} not found. Starting fresh.")
             resume_checkpoint = None
 
         # Training arguments optimized for Codespaces (16GB RAM)
@@ -578,7 +593,6 @@ class VinaSmolLoRATrainer:
             return None
 
         try:
-
             logger.info(f"Pushing to HuggingFace Hub: {self.config.hub.repo_id}")
 
             # Push adapter
@@ -634,9 +648,7 @@ class VinaSmolLoRATrainer:
 
 def main():
     """Main training entrypoint."""
-    parser = argparse.ArgumentParser(
-        description="LoRA fine-tuning for VinaSmol Vietnamese LLM"
-    )
+    parser = argparse.ArgumentParser(description="LoRA fine-tuning for VinaSmol Vietnamese LLM")
     parser.add_argument(
         "--config",
         type=str,

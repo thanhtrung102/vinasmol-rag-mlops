@@ -83,9 +83,7 @@ class VietnameseDetector:
         """
         return bool(self.VIETNAMESE_CHARS.search(text))
 
-    def filter_vietnamese(
-        self, texts: list[str], use_quick_check: bool = True
-    ) -> list[str]:
+    def filter_vietnamese(self, texts: list[str], use_quick_check: bool = True) -> list[str]:
         """Filter a list of texts to keep only Vietnamese.
 
         Args:

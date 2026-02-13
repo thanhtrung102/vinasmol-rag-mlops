@@ -157,9 +157,7 @@ class TrainerConfig:
         return cls(
             model=cls._parse_section(data.get("model", {}), ModelConfig),
             lora=cls._parse_section(data.get("lora", {}), LoRAConfig),
-            quantization=cls._parse_section(
-                data.get("quantization", {}), QuantizationConfig
-            ),
+            quantization=cls._parse_section(data.get("quantization", {}), QuantizationConfig),
             training=cls._parse_section(data.get("training", {}), TrainingParams),
             data=cls._parse_section(data.get("data", {}), DataConfig),
             output=cls._parse_section(data.get("output", {}), OutputConfig),

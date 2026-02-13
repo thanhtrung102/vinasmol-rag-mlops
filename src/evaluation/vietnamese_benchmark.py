@@ -285,10 +285,10 @@ def main():
         print("\n=== Vietnamese Benchmark Statistics ===")
         print(f"Total Questions: {stats['total_questions']}")
         print("\nBy Category:")
-        for cat, count in stats['categories'].items():
+        for cat, count in stats["categories"].items():
             print(f"  {cat}: {count}")
         print("\nBy Difficulty:")
-        for diff, count in stats['difficulties'].items():
+        for diff, count in stats["difficulties"].items():
             print(f"  {diff}: {count}")
 
     if args.export:
