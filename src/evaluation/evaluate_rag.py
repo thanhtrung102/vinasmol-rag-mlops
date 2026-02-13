@@ -41,12 +41,22 @@ class RAGEvaluator:
     def _load_metrics(self):
         """Lazy load Ragas metrics."""
         if self._metrics is None:
-            from ragas.metrics import (
-                faithfulness,
-                answer_relevancy,
-                context_precision,
-                context_recall,
-            )
+            try:
+                # Try new import path (ragas >= 0.2)
+                from ragas.metrics.collections import (
+                    faithfulness,
+                    answer_relevancy,
+                    context_precision,
+                    context_recall,
+                )
+            except ImportError:
+                # Fallback to old import path
+                from ragas.metrics import (
+                    faithfulness,
+                    answer_relevancy,
+                    context_precision,
+                    context_recall,
+                )
 
             self._metrics = {
                 "faithfulness": faithfulness,
@@ -82,6 +92,7 @@ class RAGEvaluator:
 
         if ground_truths:
             data["ground_truth"] = ground_truths
+            data["reference"] = ground_truths  # Ragas context_precision requires 'reference'
 
         return Dataset.from_dict(data)
 
